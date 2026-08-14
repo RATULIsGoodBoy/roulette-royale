@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Roulette Royale</title>
+    <link rel="stylesheet" href="./style.css">
+  </head>
+  <body>
+    <!-- Audio Gate Modal -->
+    <div id="lobby-modal" class="modal">
+      <div class="modal-content glass">
+        <h1>Roulette Royale</h1>
+        <p>A high-stakes fusion of Blackjack and Buckshot.</p>
+        <button id="btn-enter" tabindex="0" aria-label="Enter Casino">Enter Casino</button>
+      </div>
+    </div>
+
+    <!-- Main Game Board -->
+    <div id="app" class="hidden">
+      <div class="crt-overlay"></div>
+      
+      <header>
+        <div id="round-info">Round: 1</div>
+        <div id="shell-info">Shells loaded: ?</div>
+      </header>
+
+      <main class="table-grid">
+        <!-- Center Revolver Area -->
+        <div class="center-stage">
+          <div id="revolver" class="revolver"></div>
+          <div id="log" class="game-log"></div>
+        </div>
+
+        <!-- Players will be injected here dynamically -->
+        <div id="players-container" class="players-container"></div>
+      </main>
+
+      <!-- Player Controls -->
+      <footer class="controls">
+        <div class="action-buttons">
+          <button id="btn-hit" tabindex="0" aria-label="Hit (Draw Card)">Hit (H)</button>
+          <button id="btn-stand" tabindex="0" aria-label="Stand">Stand (S)</button>
+        </div>
+        <div id="inventory-controls" class="inventory">
+          <!-- Items injected here -->
+        </div>
+      </footer>
+    </div>
+
+    <!-- Muzzle Flash Overlay -->
+    <div id="muzzle-flash" class="flash hidden"></div>
+
+    <script type="module" src="/main.js"></script>
+  </body>
+</html>
