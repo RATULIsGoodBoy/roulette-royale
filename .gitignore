@@ -1,0 +1,40 @@
+```
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+build/
+target/
+
+# Logs
+*.log
+
+# Environment
+.env
+.env.local
+*.env.*
+
+# Editors
+.vscode/
+.idea/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+venv/
+.venv/
+.venv.bak/
+pip-log.txt
+pip-selfcheck.json
+
+# Coverage
+.coverage
+coverage/
+htmlcov/
+.nyc_output
+istanbul.out
+```
