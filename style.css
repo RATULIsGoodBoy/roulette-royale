@@ -1,11 +1,13 @@
 :root {
-  --bg-color: #0b0c10;
-  --text-primary: #c5c6c7;
-  --accent-red: #d90429;
-  --accent-green: #2ecc71;
-  --accent-cyan: #45f3ff;
-  --glass-bg: rgba(255, 255, 255, 0.05);
-  --glass-border: rgba(255, 255, 255, 0.1);
+  --bg-color: #050505;
+  --text-primary: #a8a8a8;
+  --accent-red: #ff003c;
+  --accent-green: #00ff41;
+  --accent-cyan: #00f0ff;
+  --glass-bg: rgba(20, 20, 20, 0.7);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --font-terminal: 'Courier New', Courier, monospace;
+  --font-debt: 'Impact', 'Arial Black', sans-serif;
 }
 
 * {
@@ -15,11 +17,30 @@
 }
 
 body {
-  font-family: 'Courier New', Courier, monospace;
+  font-family: var(--font-terminal);
   background-color: var(--bg-color);
   color: var(--text-primary);
-  overflow: hidden; /* Prevent scrolling during gameplay */
+  overflow: hidden;
   user-select: none;
+  position: relative;
+}
+
+/* Procedural Noise Background */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.08'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 0;
+  animation: noiseShift 0.5s steps(4) infinite;
+}
+
+@keyframes noiseShift {
+  0%, 100% { transform: translate(0, 0); }
+  25% { transform: translate(-5%, -5%); }
+  50% { transform: translate(5%, 5%); }
+  75% { transform: translate(-5%, 5%); }
 }
 
 .hidden {
@@ -33,7 +54,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(0, 0, 0, 0.8);
+  background: rgba(0, 0, 0, 0.95);
   z-index: 1000;
 }
 
@@ -46,25 +67,29 @@ body {
   border-radius: 8px;
   text-align: center;
   box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+  max-width: 500px;
 }
 
 button {
   background: transparent;
   color: var(--accent-cyan);
   border: 1px solid var(--accent-cyan);
-  padding: 0.5rem 1rem;
+  padding: 0.75rem 1.5rem;
   font-family: inherit;
   font-size: 1rem;
   cursor: pointer;
   border-radius: 4px;
   transition: all 0.2s ease;
   margin-top: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
 }
 
 button:hover, button:focus {
   background: var(--accent-cyan);
   color: var(--bg-color);
   outline: none;
+  box-shadow: 0 0 20px rgba(69, 243, 255, 0.5);
 }
 
 button:disabled {
@@ -74,17 +99,307 @@ button:disabled {
   background: transparent;
 }
 
+/* --- Lore Text --- */
+.lore-title {
+  font-size: 2.5rem;
+  color: var(--accent-red);
+  text-shadow: 0 0 20px var(--accent-red);
+  margin-bottom: 1rem;
+  letter-spacing: 0.2em;
+}
+
+.lore-text {
+  font-size: 1rem;
+  line-height: 1.6;
+  margin-bottom: 0.5rem;
+  color: var(--text-primary);
+}
+
+.debt-amount {
+  color: var(--accent-red);
+  font-weight: bold;
+  font-size: 1.2em;
+}
+
+.debt-display {
+  color: var(--accent-red);
+  font-family: var(--font-debt);
+  font-weight: bold;
+  font-size: 1.4rem;
+  text-shadow: 0 0 15px rgba(255, 0, 60, 0.8), 2px 2px 0 rgba(0, 0, 0, 0.5);
+  letter-spacing: 0.05em;
+  animation: pulse-debt 1.5s infinite, glitch-text 3s infinite;
+  position: relative;
+}
+
+@keyframes glitch-text {
+  0%, 100% { transform: translate(0, 0); }
+  10% { transform: translate(-2px, 1px); }
+  20% { transform: translate(2px, -1px); }
+  30% { transform: translate(-1px, 2px); }
+  40% { transform: translate(1px, -2px); }
+  50% { transform: translate(0, 0); }
+}
+
+@keyframes pulse-debt {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+.mute-toggle {
+  margin-top: 1.5rem;
+  font-size: 0.8rem;
+  letter-spacing: 0.1em;
+}
+
+.mute-toggle input[type="checkbox"] {
+  margin-right: 0.5rem;
+  accent-color: var(--accent-red);
+}
+
+/* --- Mute Button in Header --- */
+.mute-btn {
+  background: transparent;
+  border: none;
+  font-size: 1.5rem;
+  padding: 0.25rem;
+  margin: 0;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.mute-btn:hover {
+  transform: scale(1.2);
+  background: transparent;
+  box-shadow: none;
+}
+
+/* --- Loading Screen --- */
+.loading-screen {
+  position: fixed;
+  inset: 0;
+  background: var(--bg-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  transition: opacity 0.5s ease-out;
+}
+
+.loading-screen.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.loading-content {
+  text-align: center;
+}
+
+.loader {
+  width: 60px;
+  height: 60px;
+  border: 4px solid var(--glass-border);
+  border-top-color: var(--accent-red);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 1rem;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.loading-text {
+  color: var(--accent-cyan);
+  letter-spacing: 0.2em;
+  animation: pulse 1.5s ease-in-out infinite;
+  font-size: 1.2rem;
+}
+
+.loading-subtext {
+  color: #666;
+  font-size: 0.8rem;
+  letter-spacing: 0.1em;
+  margin-top: 0.5rem;
+}
+
+/* --- Round Overlay --- */
+.round-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.95);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1500;
+  pointer-events: none;
+  transition: opacity 0.3s ease-out;
+}
+
+.round-overlay.hidden {
+  opacity: 0;
+}
+
+.round-content {
+  text-align: center;
+  animation: zoomIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+#round-title {
+  font-size: 5rem;
+  color: var(--accent-red);
+  text-shadow: 0 0 30px var(--accent-red);
+  margin-bottom: 0.5rem;
+  letter-spacing: 0.3em;
+}
+
+#round-subtitle {
+  font-size: 1.2rem;
+  color: var(--text-primary);
+  letter-spacing: 0.2em;
+}
+
+@keyframes zoomIn {
+  from {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* --- Blood Splash with Drip Effect --- */
+.blood-splash {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 999;
+  opacity: 0;
+  transition: opacity 0.1s ease-out;
+}
+
+.blood-splash.hidden {
+  opacity: 0;
+}
+
+.blood-splash.active {
+  opacity: 1;
+  animation: bloodSplatter 0.8s ease-out;
+}
+
+/* Blood drip particles */
+.blood-drip {
+  position: absolute;
+  width: 4px;
+  height: 20px;
+  background: linear-gradient(to bottom, rgba(255, 0, 60, 0.9), rgba(139, 0, 0, 0.6));
+  border-radius: 2px;
+  top: -20px;
+  animation: drip 2s ease-in forwards;
+}
+
+@keyframes drip {
+  0% {
+    transform: translateY(0) scaleY(0.5);
+    opacity: 0.8;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(400px) scaleY(1.2);
+    opacity: 0;
+  }
+}
+
+@keyframes bloodSplatter {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1.5);
+  }
+}
+
 /* --- CRT & VFX --- */
 .crt-overlay {
   position: fixed;
   inset: 0;
   pointer-events: none;
-  background: linear-gradient(
-    rgba(18, 16, 16, 0) 50%,
-    rgba(0, 0, 0, 0.25) 50%
-  );
+  background: 
+    linear-gradient(
+      rgba(18, 16, 16, 0) 50%,
+      rgba(0, 0, 0, 0.25) 50%
+    );
   background-size: 100% 4px;
   z-index: 998;
+}
+
+/* Additional scanline animation */
+.crt-overlay::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    rgba(0, 255, 61, 0.03) 50%,
+    transparent 100%
+  );
+  animation: scanline 8s linear infinite;
+}
+
+@keyframes scanline {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(100%); }
+}
+
+/* Chromatic aberration on damage */
+.damage-effect {
+  animation: chromaticShift 0.3s ease-out;
+}
+
+@keyframes chromaticShift {
+  0%, 100% { filter: none; }
+  25% { filter: hue-rotate(-5deg) blur(1px); }
+  50% { filter: hue-rotate(5deg) blur(1px); }
+  75% { filter: hue-rotate(-5deg) blur(0.5px); }
+}
+
+/* Compression artifacts */
+.compression-glitch {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9999;
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0.5) 0px,
+    rgba(0, 0, 0, 0.5) 2px,
+    transparent 2px,
+    transparent 4px
+  );
+  opacity: 0;
+  mix-blend-mode: multiply;
+}
+
+.compression-glitch.active {
+  animation: glitchBlock 0.2s steps(2);
+}
+
+@keyframes glitchBlock {
+  0% { opacity: 0.8; transform: translateX(0); }
+  50% { opacity: 0.4; transform: translateX(-10px); }
+  100% { opacity: 0; transform: translateX(10px); }
 }
 
 .flash {
@@ -102,6 +417,27 @@ button:disabled {
   opacity: 1;
 }
 
+/* --- Screen Shake --- */
+.shake-heavy {
+  animation: shakeHeavy 0.5s ease-out;
+}
+
+.shake-light {
+  animation: shakeLight 0.3s ease-out;
+}
+
+@keyframes shakeHeavy {
+  0%, 100% { transform: translate(0, 0); }
+  10%, 30%, 50%, 70%, 90% { transform: translate(-10px, -10px); }
+  20%, 40%, 60%, 80% { transform: translate(10px, 10px); }
+}
+
+@keyframes shakeLight {
+  0%, 100% { transform: translate(0, 0); }
+  25%, 75% { transform: translate(-5px, -5px); }
+  50% { transform: translate(5px, 5px); }
+}
+
 /* --- Layout --- */
 #app {
   display: flex;
@@ -112,6 +448,7 @@ button:disabled {
 header {
   display: flex;
   justify-content: space-between;
+  align-items: center;
   padding: 1rem;
   font-size: 1.2rem;
   border-bottom: 1px solid var(--glass-border);
@@ -133,17 +470,26 @@ header {
 }
 
 .revolver {
-  width: 100px;
-  height: 100px;
-  background: radial-gradient(circle, #333 40%, #111 60%);
+  width: 120px;
+  height: 120px;
+  background: radial-gradient(circle, #444 40%, #111 60%);
   border-radius: 50%;
-  border: 4px solid #555;
+  border: 6px solid #666;
   margin: 0 auto 1rem;
+  box-shadow: 0 0 30px rgba(217, 4, 41, 0.3);
+  animation: revolverPulse 2s ease-in-out infinite;
+}
+
+@keyframes revolverPulse {
+  0%, 100% { box-shadow: 0 0 30px rgba(217, 4, 41, 0.3); }
+  50% { box-shadow: 0 0 50px rgba(217, 4, 41, 0.6); }
 }
 
 .game-log {
   min-height: 2em;
   color: var(--accent-red);
+  font-size: 1rem;
+  text-shadow: 0 0 10px var(--accent-red);
 }
 
 .players-container {
@@ -159,18 +505,56 @@ header {
   border: 1px solid var(--glass-border);
   padding: 1rem;
   border-radius: 8px;
-  min-width: 150px;
+  min-width: 180px;
   text-align: center;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.player-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(45deg, transparent 40%, rgba(255,255,255,0.1) 50%, transparent 60%);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.player-card.active::before {
+  opacity: 1;
+  animation: cardShine 1.5s ease-in-out infinite;
+}
+
+@keyframes cardShine {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
 }
 
 .player-card.active {
   border-color: var(--accent-cyan);
-  box-shadow: 0 0 15px rgba(69, 243, 255, 0.3);
+  box-shadow: 0 0 20px rgba(69, 243, 255, 0.5);
+  transform: scale(1.05);
 }
 
 .player-card.eliminated {
-  opacity: 0.5;
+  opacity: 0.4;
   filter: grayscale(100%);
+  transform: scale(0.95);
+}
+
+.player-card h3 {
+  font-size: 1rem;
+  margin-bottom: 0.5rem;
+  color: var(--text-primary);
+}
+
+.player-card p {
+  font-size: 0.9rem;
+  margin: 0.25rem 0;
 }
 
 .player-hand {
@@ -178,6 +562,7 @@ header {
   gap: 0.25rem;
   justify-content: center;
   margin: 0.5rem 0;
+  flex-wrap: wrap;
 }
 
 .card {
@@ -186,9 +571,16 @@ header {
   padding: 0.25rem 0.5rem;
   border-radius: 4px;
   font-weight: bold;
-  /* Card Physics Hook */
+  font-size: 0.9rem;
   transform: translate3d(0, 0, 0);
   transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.inventory {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  justify-content: center;
 }
 
 .controls {
@@ -197,6 +589,8 @@ header {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
 }
 
 .action-buttons {
@@ -204,7 +598,16 @@ header {
   gap: 1rem;
 }
 
-.inventory {
-  display: flex;
-  gap: 0.5rem;
+.inventory-item {
+  font-size: 0.75rem;
+  border: 1px solid var(--accent-cyan);
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.inventory-item:hover {
+  background: var(--accent-cyan);
+  color: var(--bg-color);
 }
