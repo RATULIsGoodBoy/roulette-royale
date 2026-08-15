@@ -1,17 +1,13 @@
-import { defineConfig } from 'vite';
-import glsl from 'vite-plugin-glsl';
+import { defineConfig } from 'vite'
+
+const REPO_NAME = 'your-repo-name';
 
 export default defineConfig({
-  base: './',
-  plugins: [glsl()],
+  base: `/${REPO_NAME}/`,
   build: {
     outDir: 'dist',
-    minify: 'terser',
+    assetsDir: 'assets',
     sourcemap: false,
-    terserOptions: {
-      compress: {
-        drop_console: false,
-      },
-    },
+    minify: 'terser',
   },
-});
+})
