@@ -32,7 +32,9 @@ async function boot() {
     lobbyModal.classList.remove('hidden');
     
     // Dev mode: auto-bypass after short delay for HMR workflow
-    if (import.meta.env.DEV) {
+    let isDev = false;
+    try { isDev = import.meta.env && import.meta.env.DEV; } catch(e) {}
+    if (isDev) {
       setTimeout(() => {
         if (lobbyModal && !lobbyModal.classList.contains('hidden')) {
           enterGame();

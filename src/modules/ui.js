@@ -39,7 +39,7 @@ export function initUI() {
   if (btnRestart) btnRestart.addEventListener('click', () => {
     localStorage.removeItem('rouletteRoyaleSave');
     gameOverModal.classList.add('hidden');
-    state.init(4, 2);
+    state.init('Player 1', 4);
     events.emit('GAME_STARTED');
   });
 

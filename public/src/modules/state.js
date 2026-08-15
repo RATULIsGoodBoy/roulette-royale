@@ -54,6 +54,7 @@ export class GameState {
     this.round = 1;
     this.phase = 'DEAL';
     this.lastVictimIndex = -1;
+    this.initialized = true;
     this.generateShells();
     this.startRound();
   }
@@ -287,7 +288,7 @@ export class GameState {
   }
 
   endRound() {
-    if (!this.initialized) return;
+    if (this.phase === 'END') return;
     
     // Check for human death first
     const human = this.players[0];
