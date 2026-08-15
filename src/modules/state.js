@@ -283,11 +283,15 @@ export class GameState {
         events.emit('BLANK_SURVIVAL_REWARD', { player: lowest });
       }
     }
-
-    setTimeout(() => this.endRound(), 3000);
+    console.log('[SHOWDOWN] Scheduling endRound in 1.5s...');
+    setTimeout(() => {
+      console.log('[SHOWDOWN] endRound firing now');
+      this.endRound();
+    }, 1500);
   }
 
   endRound() {
+    console.log('[endRound] phase:', this.phase, 'round:', this.round);
     if (this.phase === 'END') return;
     
     // Check for human death first
@@ -310,11 +314,16 @@ export class GameState {
     
     this.round += 1;
     const active = this.getActivePlayers();
+    console.log('[endRound] active players:', active.length, 'advancing to round', this.round);
     if (active.length > 1) {
       this.startRound();
     } else if (active.length === 1) {
       this.phase = 'END';
       events.emit('GAME_OVER', { winner: active[0], victory: true, finalDebt: this.debt });
+    } else {
+      // Edge case: all eliminated
+      this.phase = 'END';
+      events.emit('GAME_OVER', { victory: false, finalDebt: this.debt });
     }
   }
 
