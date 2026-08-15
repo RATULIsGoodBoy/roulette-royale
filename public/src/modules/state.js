@@ -26,16 +26,20 @@ export class GameState {
     this.shells = [];
     this.round = 1;
     this.currentTurnIndex = 0;
-    this.phase = 'LOBBY'; // LOBBY, DEAL, TURN, SHOWDOWN, END
+    this.phase = 'LOBBY';
     this.deck = ['2','3','4','5','6','7','8','9','10','J','Q','K','A'];
     this.itemDeck = ['Magnifier', 'Cylinder Spin', 'Inverter', 'Saw', 'Handcuffs', 'Beer', 'Kevlar'];
+    this.debt = 100000;
+    this.lastVictimIndex = -1;
   }
 
-  init(playerCount = 4, startingHP = 2) {
-    this.players = Array.from({ length: playerCount }, (_, i) => ({
-      id: i === 0 ? 'Player 1' : `Bot ${i}`,
+  init(playerName = 'Player 1', totalPlayers = 4, startingHP = 2) {
+    this.debt = 100000;
+    this.players = Array.from({ length: totalPlayers }, (_, i) => ({
+      id: i === 0 ? playerName : `Bot ${i}`,
       isBot: i > 0,
       hp: startingHP,
+      maxHp: startingHP,
       cards: [],
       inventory: [],
       stood: false,
@@ -43,10 +47,13 @@ export class GameState {
       eliminated: false,
       handcuffed: false,
       armor: false,
-      sawed: false
+      sawed: false,
+      panic: false,
+      personality: i === 1 ? 'AGGRESSIVE' : i === 2 ? 'TACTICAL' : 'CAUTIOUS'
     }));
     this.round = 1;
     this.phase = 'DEAL';
+    this.lastVictimIndex = -1;
     this.generateShells();
     this.startRound();
   }
@@ -65,6 +72,7 @@ export class GameState {
 
   startRound() {
     this.phase = 'DEAL';
+    this.lastVictimIndex = -1;
     this.players.forEach(p => {
       if (p.eliminated) return;
       p.cards = [];
@@ -73,16 +81,17 @@ export class GameState {
       p.handcuffed = false;
       p.armor = false;
       p.sawed = false;
-      // Deal 2 items per round
-      p.inventory.push(this.getRandomItem(), this.getRandomItem());
-      // Deal 2 starting cards
+      p.panic = p.hp <= 2;
+      p.inventory = [this.getRandomItem(), this.getRandomItem()];
       p.cards.push(this.getRandomCard(), this.getRandomCard());
     });
     this.currentTurnIndex = 0;
     this.phase = 'TURN';
-    events.emit('ROUND_START', { round: this.round });
+    events.emit('ROUND_START', { round: this.round, debt: this.debt });
+    events.emit('SHOW_ROUND_OVERLAY', { round: this.round, debt: this.debt });
+    events.emit('DEALER_TAUNT', { type: 'warning' });
     this.saveState();
-    this.checkTurn();
+    setTimeout(() => this.checkTurn(), 2000);
   }
 
   getRandomCard() {
@@ -100,27 +109,66 @@ export class GameState {
     }
     const isLive = this.shells.shift() === 'LIVE';
     const target = this.players.find(p => p.id === targetId);
+    const targetIndex = this.players.indexOf(target);
+    const shooter = shooterId ? this.players.find(p => p.id === shooterId) : null;
+    this.lastVictimIndex = targetIndex;
+    
     let dmg = isLive ? 1 : 0;
     
     if (target) {
       if (isLive && target.armor) {
         dmg = 0;
-        target.armor = false; // consume armor
+        target.armor = false;
         events.emit('ARMOR_BLOCK', { target });
-      } else if (isLive && shooterId) {
-        const shooter = this.players.find(p => p.id === shooterId);
-        if (shooter && shooter.sawed) {
-          dmg *= 2;
-          shooter.sawed = false;
-        }
+      } else if (isLive && shooter && shooter.sawed) {
+        dmg *= 2;
+        shooter.sawed = false;
       }
       
       target.hp -= dmg;
       if (target.hp <= 0) target.eliminated = true;
+      
+      // Dealer taunt on kill
+      if (target.eliminated) {
+        setTimeout(() => events.emit('DEALER_TAUNT', { type: 'death' }), 300);
+        if (target.id !== 'Player 1') {
+          setTimeout(() => events.emit('DEALER_TAUNT', { type: 'laugh' }), 800);
+        }
+      }
+      
+      // Calculate distance for audio
+      const shooterIdx = shooterId ? this.players.findIndex(p => p.id === shooterId) : -1;
+      const distance = shooterIdx !== -1 
+        ? 1.0 - (Math.abs(shooterIdx - targetIndex) / this.players.length) * 0.7
+        : 1.0;
+      
+      events.emit('WEAPON_FIRED', { 
+        target, 
+        isLive, 
+        dmg, 
+        shooterId, 
+        bloodIntensity: this.getBloodIntensity(0),
+        distance 
+      });
+      
+      // Dealer taunt on kill (removed - now handled in fireWeapon)
+    } else {
+      events.emit('WEAPON_FIRED', { target: null, isLive, dmg: 0, shooterId, distance: 1.0 });
     }
-    events.emit('WEAPON_FIRED', { target, isLive, dmg });
+    
     events.emit('SHELLS_UPDATED', { total: this.shells.length });
     return isLive;
+  }
+
+  getBloodIntensity(observerId) {
+    if (this.lastVictimIndex === -1) return 0;
+    if (observerId === this.lastVictimIndex) return 1.0;
+    const totalPlayers = this.players.length;
+    const dist = Math.abs(observerId - this.lastVictimIndex);
+    const normalizedDist = Math.min(dist, totalPlayers - dist);
+    if (normalizedDist === 0) return 1.0;
+    if (normalizedDist === 1) return 0.7;
+    return 0.3;
   }
 
   getActivePlayers() {
@@ -132,7 +180,8 @@ export class GameState {
     const active = this.getActivePlayers();
     if (active.length <= 1) {
       this.phase = 'END';
-      events.emit('GAME_OVER', { winner: active[0] });
+      const winner = active[0] || this.players.find(p => !p.eliminated);
+      events.emit('GAME_OVER', { winner });
       return;
     }
 
@@ -159,7 +208,6 @@ export class GameState {
     
     if (p.isBot) {
       events.emit('BOT_TURN', { player: p });
-      // Bot logic is handled elsewhere, we wait for it
     }
   }
 
@@ -180,9 +228,10 @@ export class GameState {
     const score = calculateScore(p.cards);
     if (score > 21) {
       p.busted = true;
-      p.hp -= 1; // Bust penalty
-      events.emit('PLAYER_BUST', { player: p });
-      const isLive = this.fireWeapon(p.id); // Blind fire
+      p.hp -= 1;
+      this.lastVictimIndex = this.players.indexOf(p); // Track for blood
+      events.emit('PLAYER_BUST', { player: p, bloodIntensity: this.getBloodIntensity(0) });
+      const isLive = this.fireWeapon(p.id);
       events.emit('BLIND_FIRE', { player: p, isLive });
     }
     this.nextTurn();
@@ -201,7 +250,6 @@ export class GameState {
   evaluateShowdown() {
     events.emit('SHOWDOWN_START');
     
-    // Get standing players
     let standers = this.getActivePlayers().filter(p => p.stood && !p.busted);
     
     if (standers.length === 0) {
@@ -211,25 +259,20 @@ export class GameState {
     
     standers.sort((a, b) => calculateScore(b.cards) - calculateScore(a.cards));
 
-    // Determine cascade sequence (Highest to lowest)
-    // For now, simplicity: Highest gets to shoot a target of choice. Lowest must shoot self.
     const highest = standers[0];
     const lowest = standers[standers.length - 1];
 
     if (highest.id === lowest.id) {
-       // Only 1 person stood, others busted
        this.endRound();
        return;
     }
 
     if (calculateScore(highest.cards) === calculateScore(lowest.cards)) {
-      // Tie / Sudden Death
       events.emit('SUDDEN_DEATH', { p1: highest, p2: lowest });
       this.fireWeapon(highest.id);
       this.fireWeapon(lowest.id);
     } else {
-      // Cascade
-      events.emit('CASCADE_SHOOT', { shooter: highest, target: lowest }); // Simplified: highest shoots lowest
+      events.emit('CASCADE_SHOOT', { shooter: highest, target: lowest });
       this.fireWeapon(lowest.id, highest.id);
       
       events.emit('CASCADE_SELF', { shooter: lowest });
@@ -244,13 +287,33 @@ export class GameState {
   }
 
   endRound() {
+    if (!this.initialized) return;
+    
+    // Check for human death first
+    const human = this.players[0];
+    if (human.eliminated) {
+      this.debt += 50000; // Penalty debt
+      this.phase = 'END';
+      events.emit('GAME_OVER', { victory: false, finalDebt: this.debt });
+      return;
+    }
+    
+    // Debt reduction
+    this.debt = Math.max(0, this.debt - 10000);
+    
+    if (this.debt === 0) {
+      this.phase = 'END';
+      events.emit('GAME_OVER', { victory: true, finalDebt: 0 });
+      return;
+    }
+    
     this.round += 1;
     const active = this.getActivePlayers();
     if (active.length > 1) {
       this.startRound();
     } else if (active.length === 1) {
       this.phase = 'END';
-      events.emit('GAME_OVER', { winner: active[0] });
+      events.emit('GAME_OVER', { winner: active[0], victory: true, finalDebt: this.debt });
     }
   }
 
