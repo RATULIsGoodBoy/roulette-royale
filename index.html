@@ -4,16 +4,52 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Roulette Royale</title>
+    <title>BLACK ROOM — Debt Collection</title>
     <link rel="stylesheet" href="./style.css">
   </head>
   <body>
-    <!-- Audio Gate Modal -->
-    <div id="lobby-modal" class="modal">
+    <!-- Loading Screen -->
+    <div id="loading-screen" class="loading-screen">
+      <div class="loading-content">
+        <div class="loader"></div>
+        <p class="loading-text">CONNECTING TO BLACK ROOM...</p>
+        <p class="loading-subtext">ENCRYPTED CONNECTION ESTABLISHED</p>
+      </div>
+    </div>
+
+    <!-- Audio Gate Modal / Lobby -->
+    <div id="lobby-modal" class="modal hidden">
       <div class="modal-content glass">
-        <h1>Roulette Royale</h1>
-        <p>A high-stakes fusion of Blackjack and Buckshot.</p>
-        <button id="btn-enter" tabindex="0" aria-label="Enter Casino">Enter Casino</button>
+        <h1 class="lore-title">BLACK ROOM</h1>
+        <p class="lore-text">You owe <span class="debt-amount">$100,000</span>. The Dealer doesn't forgive.</p>
+        <p class="lore-text">Win the circle. Walk free. Lose... become an example.</p>
+        <button id="btn-enter" tabindex="0" aria-label="Enter the Black Room">ENTER THE CIRCLE</button>
+        <div class="mute-toggle">
+          <label>
+            <input type="checkbox" id="mute-audio" />
+            MUTE AUDIO
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <!-- Round Start Overlay -->
+    <div id="round-overlay" class="round-overlay hidden">
+      <div class="round-content">
+        <h2 id="round-title">ROUND 1</h2>
+        <p id="round-subtitle">DEBT COLLECTION IN PROGRESS...</p>
+      </div>
+    </div>
+
+    <!-- Blood Splash Overlay (positional) -->
+    <div id="blood-splash" class="blood-splash hidden"></div>
+
+    <!-- Game Over Screen -->
+    <div id="game-over-modal" class="modal hidden">
+      <div class="modal-content glass">
+        <h1 id="game-over-title">GAME OVER</h1>
+        <p id="game-over-reason"></p>
+        <button id="btn-restart">REENTER THE CIRCLE</button>
       </div>
     </div>
 
@@ -23,7 +59,9 @@
       
       <header>
         <div id="round-info">Round: 1</div>
+        <div id="debt-display" class="debt-display">DEBT: $100,000</div>
         <div id="shell-info">Shells loaded: ?</div>
+        <button id="btn-mute" class="mute-btn" aria-label="Toggle Mute">🔊</button>
       </header>
 
       <main class="table-grid">
@@ -40,8 +78,8 @@
       <!-- Player Controls -->
       <footer class="controls">
         <div class="action-buttons">
-          <button id="btn-hit" tabindex="0" aria-label="Hit (Draw Card)">Hit (H)</button>
-          <button id="btn-stand" tabindex="0" aria-label="Stand">Stand (S)</button>
+          <button id="btn-hit" tabindex="0" aria-label="Hit (Draw Card)">HIT (H)</button>
+          <button id="btn-stand" tabindex="0" aria-label="Stand">STAND (S)</button>
         </div>
         <div id="inventory-controls" class="inventory">
           <!-- Items injected here -->
@@ -51,6 +89,9 @@
 
     <!-- Muzzle Flash Overlay -->
     <div id="muzzle-flash" class="flash hidden"></div>
+
+    <!-- Compression Glitch Overlay -->
+    <div id="compression-glitch" class="compression-glitch"></div>
 
     <script type="module" src="/main.js"></script>
   </body>
