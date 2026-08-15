@@ -1,6 +1,6 @@
 import { events } from './events.js';
 import { state, calculateScore } from './state.js';
-import { audio } from './audio.js';
+import { audioEngine } from './audio.js';
 
 export function initUI() {
   const playersContainer = document.getElementById('players-container');
@@ -24,7 +24,7 @@ export function initUI() {
   // Mute toggle handlers
   function toggleMute() {
     isMuted = !isMuted;
-    audio.setMute(isMuted);
+    audioEngine.setMute(isMuted);
     btnMute.textContent = isMuted ? '🔇' : '🔊';
     if (muteCheckbox) muteCheckbox.checked = isMuted;
   }
@@ -32,7 +32,7 @@ export function initUI() {
   if (btnMute) btnMute.addEventListener('click', toggleMute);
   if (muteCheckbox) muteCheckbox.addEventListener('change', () => {
     isMuted = muteCheckbox.checked;
-    audio.setMute(isMuted);
+    audioEngine.setMute(isMuted);
     btnMute.textContent = isMuted ? '🔇' : '🔊';
   });
 
@@ -80,13 +80,13 @@ export function initUI() {
   });
 
   events.on('CARD_DRAWN', ({ player }) => {
-    audio.playHeartbeat(0.5);
+    audioEngine.playHeartbeat(0.5);
     render();
   });
 
   events.on('PLAYER_BUST', ({ player }) => {
     log(`${player.id} BUSTED! -1HP + BLIND FIRE`);
-    audio.playHeartbeat(1.5);
+    audioEngine.playHeartbeat(1.5);
     shakeScreen('heavy');
     render();
   });
@@ -107,14 +107,14 @@ export function initUI() {
       const volume = audioDistance <= 0.5 ? 1.0 : audioDistance <= 1 ? 0.8 : audioDistance <= 2 ? 0.5 : 0.3;
       
       log(`BANG! ${target?.id || 'Unknown'} took ${dmg} DMG!`);
-      audio.playGunshot(true, volume, audioDistance);
+      audioEngine.playGunshot(true, volume, audioDistance);
       flashScreen();
       shakeScreen('heavy');
       
       showBloodSplash(targetIndex, playerIndex, bloodIntensity || 0.5);
     } else {
       log(`*click* Blank.`);
-      audio.playGunshot(false, 0.5, 1.0);
+      audioEngine.playGunshot(false, 0.5, 1.0);
     }
     render();
   });
@@ -123,24 +123,24 @@ export function initUI() {
     const playerIndex = state.players.findIndex(p => p.id === player.id);
     if (isLive) {
       log(`${player.id} blind fires SELF!`);
-      audio.playGunshot(true, 1.0, 1.0);
+      audioEngine.playGunshot(true, 1.0, 1.0);
       flashScreen();
       shakeScreen('heavy');
       showBloodSplash(playerIndex, playerIndex, 1.0);
     } else {
       log(`${player.id} blind fires... blank.`);
-      audio.playGunshot(false, 0.3, 1.0);
+      audioEngine.playGunshot(false, 0.3, 1.0);
     }
     render();
   });
 
   events.on('DEALER_TAUNT', ({ type }) => {
-    audio.playTaunt(type);
+    audioEngine.playTaunt(type);
   });
 
   events.on('PLAYER_BUST', ({ player, bloodIntensity }) => {
     log(`${player.id} BUSTED! -1HP + BLIND FIRE`);
-    audio.playHeartbeat(1.5);
+    audioEngine.playHeartbeat(1.5);
     shakeScreen('heavy');
     // Show light blood for bust warning
     const playerIndex = state.players.findIndex(p => p.id === player.id);
