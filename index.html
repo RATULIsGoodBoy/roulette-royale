@@ -23,6 +23,13 @@
         <h1 class="lore-title">BLACK ROOM</h1>
         <p class="lore-text">You owe <span class="debt-amount">$100,000</span>. The Dealer doesn't forgive.</p>
         <p class="lore-text">Win the circle. Walk free. Lose... become an example.</p>
+        
+        <div class="lobby-settings" style="margin: 20px 0; text-align: left; display: flex; flex-direction: column; gap: 10px;">
+          <label style="color: #45f3ff;">ALIAS: <input type="text" id="lobby-name" value="Player 1" style="background: transparent; border: 1px solid #45f3ff; color: #45f3ff; padding: 5px;"/></label>
+          <label style="color: #45f3ff;">TABLE SIZE (2-6): <input type="number" id="lobby-players" min="2" max="6" value="4" style="background: transparent; border: 1px solid #45f3ff; color: #45f3ff; padding: 5px; width: 50px;"/></label>
+          <label style="color: #45f3ff;">AI BOTS (0-5): <input type="number" id="lobby-bots" min="0" max="5" value="2" style="background: transparent; border: 1px solid #45f3ff; color: #45f3ff; padding: 5px; width: 50px;"/></label>
+        </div>
+
         <button id="enter-casino-btn" tabindex="0" aria-label="Enter the Black Room">ENTER THE CIRCLE</button>
         <div class="mute-toggle">
           <label>

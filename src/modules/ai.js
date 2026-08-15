@@ -69,9 +69,12 @@ export class AIController {
 // Singleton instance for event binding
 const aiController = new AIController();
 
+import { events } from './events.js';
+
 export function initAI() {
-  // AI is now driven by TURN_START events in state.js
-  // This function exists for compatibility
+  events.on('BOT_TURN', ({ player }) => {
+    AIController.takeTurn(player.id);
+  });
 }
 
 export { aiController };

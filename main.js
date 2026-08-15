@@ -1,4 +1,4 @@
-import { GameState } from './src/modules/state.js';
+import { state } from './src/modules/state.js';
 import { audioEngine } from './src/modules/audio.js';
 import { initUI } from './src/modules/ui.js';
 import { initAI } from './src/modules/ai.js';
@@ -9,7 +9,7 @@ const lobbyModal = document.getElementById('lobby-modal');
 const btnEnter = document.getElementById('enter-casino-btn');
 const app = document.getElementById('app');
 
-let game = null;
+let gameStarted = false;
 
 // Boot Sequence
 async function boot() {
@@ -43,7 +43,7 @@ async function boot() {
 }
 
 function enterGame() {
-  if (game) return; // Prevent double initialization
+  if (gameStarted) return; // Prevent double initialization
   
   // Initialize Audio Context on user gesture (or dev auto)
   audioEngine.init();
@@ -54,14 +54,25 @@ function enterGame() {
   if (app) app.classList.remove('hidden');
   
   // Initialize game state if not restored
-  if (!game) {
-    game = new GameState();
+  if (!gameStarted) {
+    gameStarted = true;
+    
+    // Read Lobby Settings
+    const playerName = document.getElementById('lobby-name')?.value || 'Player 1';
+    let totalPlayers = parseInt(document.getElementById('lobby-players')?.value || '4');
+    let botCount = parseInt(document.getElementById('lobby-bots')?.value || '3');
+    
+    // Ensure total players matches the number of bots + 1 human
+    totalPlayers = Math.max(2, Math.min(6, botCount + 1));
     
     // Initialize UI with game instance
-    initUI(game);
+    initUI();
     
     // Initialize AI
-    initAI(game);
+    initAI();
+    
+    // START THE GAME LOOP
+    state.init(playerName, totalPlayers);
     
     console.log('BLACK ROOM: System Online');
   }
@@ -80,7 +91,7 @@ if (btnEnter) {
 
 // Handle visibility changes (tab switching)
 document.addEventListener('visibilitychange', () => {
-  if (!document.hidden && game && audioEngine) {
+  if (!document.hidden && gameStarted && audioEngine) {
     audioEngine.resume();
   }
 });
