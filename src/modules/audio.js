@@ -351,4 +351,4 @@ export class AudioEngine {
   }
 }
 
-export const audio = new AudioEngine();
+export const audioEngine = new AudioEngine();

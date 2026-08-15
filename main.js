@@ -1,34 +1,37 @@
-import { state } from './src/modules/state.js';
-import { audio } from './src/modules/audio.js';
-import { events } from './src/modules/events.js';
+import { GameState } from './src/modules/state.js';
+import { audioEngine } from './src/modules/audio.js';
 import { initUI } from './src/modules/ui.js';
 import { initAI } from './src/modules/ai.js';
 
 // DOM Elements
 const loadingScreen = document.getElementById('loading-screen');
 const lobbyModal = document.getElementById('lobby-modal');
-const btnEnter = document.getElementById('btn-enter');
+const btnEnter = document.getElementById('enter-casino-btn');
 const app = document.getElementById('app');
+
+let game = null;
 
 // Boot Sequence
 async function boot() {
+  // Force reflow to ensure CSS transitions work
+  if (loadingScreen) loadingScreen.offsetHeight;
+  
   // Show loading screen for 1.5s
   await new Promise(resolve => setTimeout(resolve, 1500));
-  loadingScreen.classList.add('hidden');
   
-  // Check for saved game
-  const hasSave = state.loadState();
+  // Fade out loading screen
+  if (loadingScreen) {
+    loadingScreen.style.opacity = '0';
+    await new Promise(resolve => setTimeout(resolve, 800));
+    loadingScreen.classList.add('hidden');
+    loadingScreen.style.display = 'none';
+  }
   
-  if (hasSave && state.phase !== 'LOBBY') {
-    // Restore game directly
-    app.classList.remove('hidden');
-    audio.resume();
-    events.emit('GAME_RESTORED');
-  } else {
-    // Show lobby (audio gate)
+  // Show lobby (audio gate) - ALWAYS show in production for user interaction
+  if (lobbyModal) {
     lobbyModal.classList.remove('hidden');
     
-    // Dev mode: auto-bypass after short delay
+    // Dev mode: auto-bypass after short delay for HMR workflow
     if (import.meta.env.DEV) {
       setTimeout(() => {
         if (lobbyModal && !lobbyModal.classList.contains('hidden')) {
@@ -40,31 +43,51 @@ async function boot() {
 }
 
 function enterGame() {
-  audio.resume();
-  lobbyModal.classList.add('hidden');
-  app.classList.remove('hidden');
+  if (game) return; // Prevent double initialization
   
-  if (!state.players.length) {
-    state.init(4, 2);
+  // Initialize Audio Context on user gesture (or dev auto)
+  audioEngine.init();
+  audioEngine.resume();
+  
+  // Hide lobby, show app
+  if (lobbyModal) lobbyModal.classList.add('hidden');
+  if (app) app.classList.remove('hidden');
+  
+  // Initialize game state if not restored
+  if (!game) {
+    game = new GameState();
+    
+    // Initialize UI with game instance
+    initUI(game);
+    
+    // Initialize AI
+    initAI(game);
+    
+    console.log('BLACK ROOM: System Online');
   }
-  
-  events.emit('GAME_STARTED');
 }
 
 // Event Listeners
 if (btnEnter) {
-  btnEnter.addEventListener('click', enterGame);
+  btnEnter.addEventListener('click', enterGame, { once: true });
   btnEnter.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault();
       enterGame();
     }
-  });
+  }, { once: true });
 }
 
-// Initialize systems
-initUI();
-initAI();
+// Handle visibility changes (tab switching)
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden && game && audioEngine) {
+    audioEngine.resume();
+  }
+});
 
-// Start boot sequence
-boot();
+// Start boot sequence when DOM is ready
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', boot);
+} else {
+  boot();
+}
