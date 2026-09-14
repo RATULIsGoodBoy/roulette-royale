@@ -462,6 +462,7 @@ header {
   justify-content: center;
   position: relative;
   padding: 1rem;
+  overflow: hidden;
 }
 
 .center-stage {
