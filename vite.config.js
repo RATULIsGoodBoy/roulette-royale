@@ -1,9 +1,7 @@
 import { defineConfig } from 'vite'
 
-const REPO_NAME = 'your-repo-name';
-
 export default defineConfig({
-  base: `/${REPO_NAME}/`,
+  base: '/',
   build: {
     outDir: 'dist',
     assetsDir: 'assets',
